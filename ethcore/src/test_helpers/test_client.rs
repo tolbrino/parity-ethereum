@@ -20,10 +20,9 @@ use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering as AtomicOrder};
 use std::sync::Arc;
 use std::collections::{HashMap, BTreeMap};
-use blockchain::BlockProvider;
 use std::mem;
 
-use blockchain::{TreeRoute, BlockReceipts};
+use blockchain::{BlockProvider, TreeRoute, BlockReceipts};
 use bytes::Bytes;
 use db::{NUM_COLUMNS, COL_STATE};
 use ethcore_miner::pool::VerifiedTransaction;
@@ -76,7 +75,6 @@ use client_traits::{
 };
 use engine::Engine;
 use machine::executed::Executed;
-use journaldb;
 use miner::{self, Miner, MinerService};
 use spec::{Spec, self};
 use account_state::state::StateInfo;
@@ -860,13 +858,19 @@ impl BlockChainClient for TestBlockChainClient {
 	fn block_receipts(&self, hash: &H256) -> Option<BlockReceipts> {
 		// starts with 'f' ?
 		if *hash > H256::from_str("f000000000000000000000000000000000000000000000000000000000000000").unwrap() {
-			let receipt = BlockReceipts::new(vec![Receipt::new(
-				TransactionOutcome::StateRoot(H256::zero()),
-				U256::zero(),
-				vec![])]);
-			return Some(receipt);
+			Some(BlockReceipts::new(vec![Receipt {
+				gas_used: U256::zero(),
+				log_bloom: Default::default(),
+				logs: Vec::new(),
+				outcome: TransactionOutcome::StateRoot(H256::zero()),
+				transaction_hash: H256::zero(),
+				transaction_index: 0,
+				cumulative_gas_used: U256::zero(),
+				contract_address: None
+			}]))
+		} else {
+			None
 		}
-		None
 	}
 
 	fn clear_queue(&self) {

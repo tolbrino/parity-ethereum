@@ -45,7 +45,7 @@ use types::{
 	io_message::ClientIoMessage,
 	engines::{Seal, SealingState},
 	errors::{EthcoreError as Error, ExecutionError},
-	receipt::RichReceipt,
+	receipt::Receipt,
 	transaction::{
 		self,
 		Action,
@@ -1209,7 +1209,7 @@ impl miner::MinerService for Miner {
 		self.transaction_queue.status()
 	}
 
-	fn pending_receipts(&self, best_block: BlockNumber) -> Option<Vec<RichReceipt>> {
+	fn pending_receipts(&self, best_block: BlockNumber) -> Option<Vec<Receipt>> {
 		self.map_existing_pending_block(|pending| {
 			let receipts = &pending.receipts;
 			pending.transactions
@@ -1218,7 +1218,7 @@ impl miner::MinerService for Miner {
 				.map(|(index, tx)| {
 					let prev_gas = if index == 0 { Default::default() } else { receipts[index - 1].gas_used };
 					let receipt = &receipts[index];
-					RichReceipt {
+					Receipt {
 						transaction_hash: tx.hash(),
 						transaction_index: index,
 						cumulative_gas_used: receipt.gas_used,

@@ -1248,21 +1248,25 @@ mod tests {
 
 	#[test]
 	fn check_receipts() {
-		let receipts = (0..5).map(|_| Receipt {
+		let receipts = (0..5).map(|i| Receipt {
 			outcome: TransactionOutcome::StateRoot(H256::random()),
-			gas_used: 21_000u64.into(),
+			gas_used: U256::from(21_000),
 			log_bloom: Default::default(),
 			logs: Vec::new(),
+			transaction_hash: H256::zero(),
+			transaction_index: i,
+			cumulative_gas_used: U256::zero(),
+			contract_address: None,
 		}).collect::<Vec<_>>();
 
 		let mut header = Header::new();
 		let receipts_root = ::triehash::ordered_trie_root(
-			receipts.iter().map(|x| ::rlp::encode(x))
+			receipts.iter().map(|x| rlp::encode(x))
 		);
 
 		header.set_receipts_root(receipts_root);
 
-		let req = BlockReceipts(encoded::Header::new(::rlp::encode(&header)).into());
+		let req = BlockReceipts(encoded::Header::new(rlp::encode(&header)).into());
 
 		let cache = Mutex::new(make_cache());
 		assert!(req.check_response(&cache, &receipts).is_ok())

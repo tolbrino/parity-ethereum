@@ -452,6 +452,7 @@ where
 	}
 
 	fn transaction_receipt(&self, hash: H256) -> BoxFuture<Option<Receipt>> {
+		trace!(target: "rpc", "transaction_receipt for {}", hash);
 		let fetcher = self.fetcher();
 		Box::new(fetcher.transaction_by_hash(hash).and_then(move |tx| {
 			// the block hash included in the transaction object here has
@@ -464,6 +465,7 @@ where
 							.and_then(move |mut receipts| future::ok(receipts.swap_remove(index)))
 							.map(Receipt::from)
 							.map(move |mut receipt| {
+								panic!("{:?}", receipt);
 								receipt.transaction_hash = Some(hash);
 								receipt.transaction_index = Some(index.into());
 								receipt.block_hash = Some(block_hash);

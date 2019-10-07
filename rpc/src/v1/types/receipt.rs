@@ -16,7 +16,7 @@
 
 use ethereum_types::{H160, H256, U64, U256, Bloom as H2048};
 use v1::types::Log;
-use types::receipt::{Receipt as EthReceipt, RichReceipt, LocalizedReceipt, TransactionOutcome};
+use types::receipt::{Receipt as EthReceipt, LocalizedReceipt, TransactionOutcome};
 
 /// Receipt
 #[derive(Debug, Serialize)]
@@ -88,8 +88,8 @@ impl From<LocalizedReceipt> for Receipt {
 	}
 }
 
-impl From<RichReceipt> for Receipt {
-	fn from(r: RichReceipt) -> Self {
+impl From<EthReceipt> for Receipt {
+	fn from(r: EthReceipt) -> Self {
 		Receipt {
 			from: None,
 			to: None,
@@ -100,26 +100,6 @@ impl From<RichReceipt> for Receipt {
 			cumulative_gas_used: r.cumulative_gas_used,
 			gas_used: Some(r.gas_used),
 			contract_address: r.contract_address.map(Into::into),
-			logs: r.logs.into_iter().map(Into::into).collect(),
-			status_code: Self::outcome_to_status_code(&r.outcome),
-			state_root: Self::outcome_to_state_root(r.outcome),
-			logs_bloom: r.log_bloom,
-		}
-	}
-}
-
-impl From<EthReceipt> for Receipt {
-	fn from(r: EthReceipt) -> Self {
-		Receipt {
-			from: None,
-			to: None,
-			transaction_hash: None,
-			transaction_index: None,
-			block_hash: None,
-			block_number: None,
-			cumulative_gas_used: r.gas_used,
-			gas_used: None,
-			contract_address: None,
 			logs: r.logs.into_iter().map(Into::into).collect(),
 			status_code: Self::outcome_to_status_code(&r.outcome),
 			state_root: Self::outcome_to_state_root(r.outcome),

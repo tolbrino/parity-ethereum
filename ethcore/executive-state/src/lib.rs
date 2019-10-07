@@ -221,7 +221,18 @@ impl<B: Backend> ExecutiveState for State<B> {
 		};
 
 		let output = e.output;
-		let receipt = Receipt::new(outcome, e.cumulative_gas_used, e.logs);
+		let receipt = Receipt {
+			transaction_hash: t.hash(),
+			// TODO(fix this)
+			transaction_index: 0,
+			contract_address: None,
+			cumulative_gas_used: e.cumulative_gas_used,
+			gas_used: e.gas_used,
+			logs: e.logs,
+			// TODO(fix this)
+			log_bloom: Default::default(),
+			outcome
+		};
 		trace!(target: "state", "Transaction receipt: {:?}", receipt);
 
 		Ok(ApplyOutcome {

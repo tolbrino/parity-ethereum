@@ -678,7 +678,9 @@ fn combine_proofs(signal_number: BlockNumber, set_proof: &[u8], finality_proof: 
 }
 
 
+// TODO(niklasad1): document this
 fn destructure_proofs(combined: &[u8]) -> Result<(BlockNumber, &[u8], &[u8]), Error> {
+	println!("destructure proof: {:?}", combined);
 	let rlp = Rlp::new(combined);
 	Ok((
 		rlp.at(0)?.as_val()?,

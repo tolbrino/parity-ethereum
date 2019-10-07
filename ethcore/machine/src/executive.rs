@@ -780,11 +780,11 @@ pub struct Executive<'a, B: 'a> {
 impl<'a, B: 'a + StateBackend> Executive<'a, B> {
 	/// Basic constructor.
 	pub fn new(state: &'a mut State<B>, info: &'a EnvInfo, machine: &'a Machine, schedule: &'a Schedule) -> Self {
-		Executive {
-			state: state,
-			info: info,
-			machine: machine,
-			schedule: schedule,
+		Self {
+			state,
+			info,
+			machine,
+			schedule,
 			depth: 0,
 			static_flag: false,
 		}

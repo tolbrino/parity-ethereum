@@ -42,7 +42,7 @@ use types::{
 	errors::EthcoreError as Error,
 	block::Block,
 	header::Header,
-	receipt::RichReceipt,
+	receipt::Receipt,
 };
 
 use block::SealedBlock;
@@ -98,10 +98,10 @@ pub trait MinerService : Send + Sync {
 	// Pending block
 
 	/// Get a list of all pending receipts from pending block.
-	fn pending_receipts(&self, best_block: BlockNumber) -> Option<Vec<RichReceipt>>;
+	fn pending_receipts(&self, best_block: BlockNumber) -> Option<Vec<Receipt>>;
 
 	/// Get a particular receipt from pending block.
-	fn pending_receipt(&self, best_block: BlockNumber, hash: &H256) -> Option<RichReceipt> {
+	fn pending_receipt(&self, best_block: BlockNumber, hash: &H256) -> Option<Receipt> {
 		let receipts = self.pending_receipts(best_block)?;
 		receipts.into_iter().find(|r| &r.transaction_hash == hash)
 	}

@@ -27,7 +27,7 @@ use types::{
 	errors::ExecutionError,
 	filter::Filter as EthcoreFilter,
 	ids::BlockId,
-	receipt::Receipt,
+	receipt::Receipt
 };
 
 use jsonrpc_core::{Result, Error};

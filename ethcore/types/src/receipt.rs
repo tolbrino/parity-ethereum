@@ -37,27 +37,36 @@ pub enum TransactionOutcome {
 /// Information describing execution of a transaction.
 #[derive(Debug, Clone, PartialEq, Eq, MallocSizeOf)]
 pub struct Receipt {
-	/// The total gas used in the block following execution of the transaction.
+	/// The gas used in the execution of the transaction. Note the difference of meaning to `Receipt::gas_used`.
 	pub gas_used: U256,
-	/// The OR-wide combination of all logs' blooms for this transaction.
+	/// Logs bloom
 	pub log_bloom: Bloom,
-	/// The logs stemming from this transaction.
+	/// Logs
 	pub logs: Vec<LogEntry>,
 	/// Transaction outcome.
 	pub outcome: TransactionOutcome,
+	/// Transaction hash.
+	pub transaction_hash: H256,
+	/// Transaction index.
+	pub transaction_index: usize,
+	/// The total gas used in the block following execution of the transaction.
+	pub cumulative_gas_used: U256,
+	/// Contract address.
+	pub contract_address: Option<Address>,
 }
 
 impl Receipt {
-	/// Create a new receipt.
-	pub fn new(outcome: TransactionOutcome, gas_used: U256, logs: Vec<LogEntry>) -> Self {
+	/// Create an empty Receipt for tests?!
+	pub fn empty() -> Self {
 		Self {
-			gas_used,
-			log_bloom: logs.iter().fold(Bloom::default(), |mut b, l| {
-				b.accrue_bloom(&l.bloom());
-				b
-			}),
-			logs,
-			outcome,
+			gas_used: U256::zero(),
+			log_bloom: Bloom::default(),
+			logs: Vec::new(),
+			outcome: TransactionOutcome::Unknown,
+			transaction_hash: H256::zero(),
+			transaction_index: 0,
+			cumulative_gas_used: U256::zero(),
+			contract_address: None,
 		}
 	}
 }
@@ -66,37 +75,42 @@ impl Encodable for Receipt {
 	fn rlp_append(&self, s: &mut RlpStream) {
 		match self.outcome {
 			TransactionOutcome::Unknown => {
-				s.begin_list(3);
+				s.begin_list(7);
 			},
 			TransactionOutcome::StateRoot(ref root) => {
-				s.begin_list(4);
+				s.begin_list(8);
 				s.append(root);
 			},
 			TransactionOutcome::StatusCode(ref status_code) => {
-				s.begin_list(4);
+				s.begin_list(8);
 				s.append(status_code);
 			},
 		}
 		s.append(&self.gas_used);
 		s.append(&self.log_bloom);
 		s.append_list(&self.logs);
+		s.append(&self.transaction_hash);
+		s.append(&self.transaction_index);
+		s.append(&self.cumulative_gas_used);
+		s.append(&self.contract_address);
 	}
 }
 
 impl Decodable for Receipt {
 	fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
-		if rlp.item_count()? == 3 {
+		if rlp.item_count()? == 7 {
 			Ok(Receipt {
 				outcome: TransactionOutcome::Unknown,
 				gas_used: rlp.val_at(0)?,
 				log_bloom: rlp.val_at(1)?,
 				logs: rlp.list_at(2)?,
+				transaction_hash: rlp.val_at(3)?,
+				transaction_index: rlp.val_at(4)?,
+				cumulative_gas_used: rlp.val_at(5)?,
+				contract_address: rlp.val_at(6)?,
 			})
 		} else {
 			Ok(Receipt {
-				gas_used: rlp.val_at(1)?,
-				log_bloom: rlp.val_at(2)?,
-				logs: rlp.list_at(3)?,
 				outcome: {
 					let first = rlp.at(0)?;
 					if first.is_data() && first.data()?.len() <= 1 {
@@ -104,31 +118,17 @@ impl Decodable for Receipt {
 					} else {
 						TransactionOutcome::StateRoot(first.as_val()?)
 					}
-				}
+				},
+				gas_used: rlp.val_at(1)?,
+				log_bloom: rlp.val_at(2)?,
+				logs: rlp.list_at(3)?,
+				transaction_hash: rlp.val_at(4)?,
+				transaction_index: rlp.val_at(5)?,
+				cumulative_gas_used: rlp.val_at(6)?,
+				contract_address: rlp.val_at(7)?,
 			})
 		}
 	}
-}
-
-/// Receipt with additional info.
-#[derive(Debug, Clone, PartialEq)]
-pub struct RichReceipt {
-	/// Transaction hash.
-	pub transaction_hash: H256,
-	/// Transaction index.
-	pub transaction_index: usize,
-	/// The total gas used in the block following execution of the transaction.
-	pub cumulative_gas_used: U256,
-	/// The gas used in the execution of the transaction. Note the difference of meaning to `Receipt::gas_used`.
-	pub gas_used: U256,
-	/// Contract address.
-	pub contract_address: Option<Address>,
-	/// Logs
-	pub logs: Vec<LogEntry>,
-	/// Logs bloom
-	pub log_bloom: Bloom,
-	/// Transaction outcome.
-	pub outcome: TransactionOutcome,
 }
 
 /// Receipt with additional info.

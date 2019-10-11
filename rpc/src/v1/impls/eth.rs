@@ -448,11 +448,12 @@ impl<C, SN: ?Sized, S: ?Sized, M, EM, T: StateInfo + 'static> EthClient<C, SN, S
 			BlockNumber::Pending => {
 				let info = self.client.chain_info();
 
-				self.miner
+				let res = Box::new(self.miner
 					.pending_state(info.best_block_number)
-					.map(|s| Box::new(s) as Box<dyn StateInfo>)
-					.unwrap_or(Box::new(self.client.latest_state()) as Box<dyn StateInfo>)
-					.into()
+					.unwrap_or_else(|| self.client.latest_state())
+				) as Box<dyn StateInfo>;
+
+				res.into()
 			}
 		}
 	}
